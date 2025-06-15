@@ -1,0 +1,236 @@
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Plus, Minus, Trash2, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+
+interface CartItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+const Cart = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [cartItems, setCartItems] = useState<CartItem[]>([
+    {
+      id: "1",
+      name: "Grilled Salmon",
+      description: "Fresh Atlantic salmon with herbs and lemon",
+      price: 28.99,
+      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop",
+      quantity: 2
+    },
+    {
+      id: "2",
+      name: "Caesar Salad",
+      description: "Crisp romaine lettuce with parmesan and croutons",
+      price: 14.99,
+      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop",
+      quantity: 1
+    }
+  ]);
+
+  const updateQuantity = (itemId: string, newQuantity: number) => {
+    if (newQuantity === 0) {
+      setCartItems(cartItems.filter(item => item.id !== itemId));
+    } else {
+      setCartItems(cartItems.map(item => 
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      ));
+    }
+  };
+
+  const removeItem = (itemId: string) => {
+    setCartItems(cartItems.filter(item => item.id !== itemId));
+  };
+
+  const getSubtotal = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const getTax = () => {
+    return getSubtotal() * 0.08; // 8% tax
+  };
+
+  const getTotal = () => {
+    return getSubtotal() + getTax();
+  };
+
+  const handleConfirmOrder = () => {
+    if (cartItems.length === 0) {
+      toast({
+        title: "Cart is empty",
+        description: "Please add items to your cart before ordering.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Here you would normally send the order to your database
+    console.log("Order confirmed:", {
+      items: cartItems,
+      subtotal: getSubtotal(),
+      tax: getTax(),
+      total: getTotal(),
+      timestamp: new Date().toISOString()
+    });
+
+    toast({
+      title: "Order Confirmed!",
+      description: "Your order is being prepared.",
+    });
+
+    navigate("/order-confirmation");
+  };
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
+          <div className="container mx-auto px-4 py-4 flex items-center">
+            <Link to="/menu" className="flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Back to Menu
+            </Link>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-8 h-8 border-2 border-gray-300 border-dashed rounded-full" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
+            <p className="text-gray-600 mb-6">Add some delicious items from our menu</p>
+            <Link to="/menu">
+              <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white">
+                Browse Menu
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
+        <div className="container mx-auto px-4 py-4 flex items-center">
+          <Link to="/menu" className="flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back to Menu
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {cartItems.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                          <p className="text-sm text-gray-600">{item.description}</p>
+                          <p className="text-lg font-bold text-orange-600">${item.price}</p>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <span className="font-medium w-8 text-center">{item.quantity}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeItem(item.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Order Summary */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>${getSubtotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tax</span>
+                      <span>${getTax().toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between text-lg font-semibold">
+                      <span>Total</span>
+                      <span>${getTotal().toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleConfirmOrder}
+                    className="w-full mt-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Confirm Order
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Cart;
