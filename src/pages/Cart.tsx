@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, Trash2, CheckCircle } from "lucide-react";
@@ -14,7 +15,10 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
-  options?: any;
+  options?: {
+    selectedOptions: Record<string, string>;
+    totalAddOnPrice: number;
+  };
 }
 
 const Cart = () => {
@@ -40,7 +44,11 @@ const Cart = () => {
   };
 
   const getSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce((total, item) => {
+      const basePrice = item.price;
+      const addOnPrice = item.options?.totalAddOnPrice || 0;
+      return total + ((basePrice + addOnPrice) * item.quantity);
+    }, 0);
   };
 
   const getTax = () => {
@@ -78,7 +86,7 @@ const Cart = () => {
     const orderItems = cartItems.map(item => ({
       menu_item_id: item.id,
       quantity: item.quantity,
-      price: item.price,
+      price: item.price + (item.options?.totalAddOnPrice || 0),
     }));
 
     try {
@@ -166,12 +174,14 @@ const Cart = () => {
                           {item.options && Object.keys(item.options.selectedOptions || {}).length > 0 && (
                             <div className="text-xs text-gray-500 mt-1">
                               {Object.entries(item.options.selectedOptions).map(([key, value]) => (
-                                <span key={key} className="mr-2">{key}: {value}</span>
+                                <span key={key} className="mr-2">{key}: {String(value)}</span>
                               ))}
                             </div>
                           )}
                           
-                          <p className="text-lg font-bold text-orange-600">${item.price}</p>
+                          <p className="text-lg font-bold text-orange-600">
+                            ${(item.price + (item.options?.totalAddOnPrice || 0)).toFixed(2)}
+                          </p>
                         </div>
 
                         <div className="flex items-center space-x-2">

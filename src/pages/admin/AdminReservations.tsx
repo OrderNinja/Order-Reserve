@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Phone, Mail, MessageSquare } from "lucide-react";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +57,7 @@ const AdminReservations = () => {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
-          <AdminSidebar />
+          <AdminSidebar isOpen={true} onToggle={() => {}} />
           <main className="flex-1 p-6">
             <SidebarTrigger />
             <div className="flex items-center justify-center h-64">
@@ -72,7 +72,7 @@ const AdminReservations = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AdminSidebar />
+        <AdminSidebar isOpen={true} onToggle={() => {}} />
         <main className="flex-1 p-6">
           <SidebarTrigger />
           <div className="space-y-6">
