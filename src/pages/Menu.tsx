@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Plus, Minus } from "lucide-react";
@@ -76,18 +77,18 @@ const Menu = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-lg text-gray-600">Loading menu...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-40">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+          <Link to="/" className="flex items-center text-gray-600 hover:text-[#951713] transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Home
           </Link>
@@ -97,7 +98,7 @@ const Menu = () => {
               <ShoppingCart className="w-5 h-5 mr-2" />
               Cart
               {getTotalItems() > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-orange-500 text-white min-w-[20px] h-5 flex items-center justify-center text-xs">
+                <Badge className="absolute -top-2 -right-2 bg-[#951713] text-white min-w-[20px] h-5 flex items-center justify-center text-xs">
                   {getTotalItems()}
                 </Badge>
               )}
@@ -108,8 +109,8 @@ const Menu = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Menu</h1>
-          <p className="text-gray-600">Discover our delicious selection</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Thai Menu</h1>
+          <p className="text-gray-600">Discover our authentic Thai selection</p>
         </div>
 
         {/* Category Filter */}
@@ -121,8 +122,8 @@ const Menu = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
                   selectedCategory === category
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white"
-                    : "text-gray-600 hover:text-orange-600"
+                    ? "bg-gradient-to-r from-[#951713] to-red-700 text-white"
+                    : "text-gray-600 hover:text-[#951713]"
                 }`}
               >
                 {category}
@@ -145,7 +146,7 @@ const Menu = () => {
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                  <span className="text-lg font-bold text-orange-600">${item.price}</span>
+                  <span className="text-lg font-bold text-[#951713]">฿{item.price}</span>
                 </div>
                 <p className="text-gray-600 text-sm mb-4">{item.description}</p>
                 
@@ -179,7 +180,7 @@ const Menu = () => {
                 ) : (
                   <Button
                     onClick={() => openOptionsDialog(item)}
-                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                    className="w-full bg-gradient-to-r from-[#951713] to-red-700 hover:from-red-800 hover:to-red-900 text-white"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Cart
@@ -194,7 +195,7 @@ const Menu = () => {
         {getTotalItems() > 0 && (
           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
             <Link to="/cart" state={{ cartItems: cart }}>
-              <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-3 rounded-full shadow-lg">
+              <Button className="bg-gradient-to-r from-[#951713] to-red-700 hover:from-red-800 hover:to-red-900 text-white px-8 py-3 rounded-full shadow-lg">
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Go to Cart ({getTotalItems()})
               </Button>
