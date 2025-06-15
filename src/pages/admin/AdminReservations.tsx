@@ -4,9 +4,9 @@ import { useReservations } from "@/hooks/useReservations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Clock, Users, Phone, Mail, MessageSquare } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +14,7 @@ const AdminReservations = () => {
   const { data: reservations = [], isLoading } = useReservations();
   const { toast } = useToast();
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const updateReservationStatus = async (id: string, status: 'confirmed' | 'cancelled' | 'completed') => {
     setUpdatingStatus(id);
@@ -43,147 +44,253 @@ const AdminReservations = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
       case 'completed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AdminSidebar isOpen={true} onToggle={() => {}} />
-          <main className="flex-1 p-6">
-            <SidebarTrigger />
+      <div className="min-h-screen bg-gray-50 flex">
+        <AdminSidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
+          <div className="p-6">
             <div className="flex items-center justify-center h-64">
               <div className="text-lg text-gray-600">Loading reservations...</div>
             </div>
-          </main>
+          </div>
         </div>
-      </SidebarProvider>
+      </div>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AdminSidebar isOpen={true} onToggle={() => {}} />
-        <main className="flex-1 p-6">
-          <SidebarTrigger />
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">Reservation Management</h1>
-              <div className="text-sm text-gray-600">
-                Total: {reservations.length} reservations
-              </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      <AdminSidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      
+      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Reservation Management</h1>
+            <div className="text-sm text-gray-600">
+              Total: {reservations.length} reservations
             </div>
+          </div>
+        </header>
 
-            <div className="grid gap-6">
-              {reservations.map((reservation) => (
-                <Card key={reservation.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="w-5 h-5" />
-                        {reservation.customer_name}
-                      </CardTitle>
-                      <Badge className={getStatusColor(reservation.status)}>
-                        {reservation.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-gray-500" />
-                          <span>{new Date(reservation.reservation_date).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-gray-500" />
-                          <span>{reservation.reservation_time}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="w-4 h-4 text-gray-500" />
-                          <span>{reservation.guest_count} guests</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-4 h-4 text-gray-500" />
-                          <span>{reservation.customer_email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="w-4 h-4 text-gray-500" />
-                          <span>{reservation.customer_phone}</span>
-                        </div>
-                        {reservation.special_requests && (
-                          <div className="flex items-start gap-2 text-sm">
-                            <MessageSquare className="w-4 h-4 text-gray-500 mt-0.5" />
-                            <span>{reservation.special_requests}</span>
+        <div className="p-6">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Reservations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead>Guests</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reservations.map((reservation) => (
+                      <TableRow key={reservation.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{reservation.customer_name}</div>
+                            <div className="text-xs text-gray-500">ID: {reservation.confirmation_id}</div>
                           </div>
-                        )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-sm">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(reservation.reservation_date).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="w-3 h-3" />
+                              {reservation.reservation_time}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Users className="w-4 h-4" />
+                            {reservation.guest_count}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-xs">
+                              <Mail className="w-3 h-3" />
+                              <span className="truncate max-w-[120px]">{reservation.customer_email}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs">
+                              <Phone className="w-3 h-3" />
+                              {reservation.customer_phone}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(reservation.status)}>
+                            {reservation.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {reservation.status === 'confirmed' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateReservationStatus(reservation.id, 'completed')}
+                                  disabled={updatingStatus === reservation.id}
+                                  className="bg-blue-600 hover:bg-blue-700 text-xs px-2 py-1 h-auto"
+                                >
+                                  Complete
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => updateReservationStatus(reservation.id, 'cancelled')}
+                                  disabled={updatingStatus === reservation.id}
+                                  className="text-xs px-2 py-1 h-auto"
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            )}
+                            {reservation.status === 'cancelled' && (
+                              <Button
+                                size="sm"
+                                onClick={() => updateReservationStatus(reservation.id, 'confirmed')}
+                                disabled={updatingStatus === reservation.id}
+                                className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1 h-auto"
+                              >
+                                Reconfirm
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {reservations.map((reservation) => (
+              <Card key={reservation.id} className="w-full">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{reservation.customer_name}</CardTitle>
+                    <Badge className={getStatusColor(reservation.status)}>
+                      {reservation.status}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Confirmation ID: {reservation.confirmation_id}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <span>{new Date(reservation.reservation_date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span>{reservation.reservation_time}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <span>{reservation.guest_count} guests</span>
                       </div>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-gray-500" />
+                        <span className="truncate">{reservation.customer_email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        <span>{reservation.customer_phone}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                    <div className="flex gap-2 mt-4 pt-4 border-t">
-                      {reservation.status === 'confirmed' && (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => updateReservationStatus(reservation.id, 'completed')}
-                            disabled={updatingStatus === reservation.id}
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            Mark Completed
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => updateReservationStatus(reservation.id, 'cancelled')}
-                            disabled={updatingStatus === reservation.id}
-                          >
-                            Cancel
-                          </Button>
-                        </>
-                      )}
-                      {reservation.status === 'cancelled' && (
+                  {reservation.special_requests && (
+                    <div className="pt-2 border-t">
+                      <div className="flex items-start gap-2 text-sm">
+                        <MessageSquare className="w-4 h-4 text-gray-500 mt-0.5" />
+                        <span className="text-gray-700">{reservation.special_requests}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    {reservation.status === 'confirmed' && (
+                      <>
                         <Button
                           size="sm"
-                          onClick={() => updateReservationStatus(reservation.id, 'confirmed')}
+                          onClick={() => updateReservationStatus(reservation.id, 'completed')}
                           disabled={updatingStatus === reservation.id}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-blue-600 hover:bg-blue-700 flex-1"
                         >
-                          Reconfirm
+                          Mark Completed
                         </Button>
-                      )}
-                    </div>
-
-                    <div className="text-xs text-gray-500 mt-2">
-                      Confirmation ID: {reservation.confirmation_id}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {reservations.length === 0 && (
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No reservations</h3>
-                <p className="text-gray-600">No reservations have been made yet.</p>
-              </div>
-            )}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => updateReservationStatus(reservation.id, 'cancelled')}
+                          disabled={updatingStatus === reservation.id}
+                          className="flex-1"
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    )}
+                    {reservation.status === 'cancelled' && (
+                      <Button
+                        size="sm"
+                        onClick={() => updateReservationStatus(reservation.id, 'confirmed')}
+                        disabled={updatingStatus === reservation.id}
+                        className="bg-green-600 hover:bg-green-700 w-full"
+                      >
+                        Reconfirm
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </main>
+
+          {reservations.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-medium text-gray-900 mb-2">No reservations</h3>
+              <p className="text-gray-600">No reservations have been made yet.</p>
+            </div>
+          )}
+        </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
