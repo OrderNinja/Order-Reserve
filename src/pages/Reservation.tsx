@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, Users, CheckCircle } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateReservation } from "@/hooks/useReservations";
 
 const Reservation = () => {
   const [step, setStep] = useState(1);
@@ -22,6 +23,7 @@ const Reservation = () => {
   });
   const [confirmationId, setConfirmationId] = useState("");
   const { toast } = useToast();
+  const createReservationMutation = useCreateReservation();
 
   const handleInputChange = (field: string, value: string) => {
     setReservationData(prev => ({
@@ -30,7 +32,11 @@ const Reservation = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const generateConfirmationId = () => {
+    return "RES" + Math.random().toString(36).substr(2, 9).toUpperCase();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!reservationData.name || !reservationData.email || !reservationData.phone || 
@@ -43,18 +49,27 @@ const Reservation = () => {
       return;
     }
 
-    // Generate confirmation ID
-    const id = "RES" + Math.random().toString(36).substr(2, 9).toUpperCase();
+    const id = generateConfirmationId();
     setConfirmationId(id);
-    setStep(2);
 
-    // Here you would normally send data to your database
-    console.log("Reservation data:", { ...reservationData, confirmationId: id });
-    
-    toast({
-      title: "Reservation Confirmed!",
-      description: `Your table has been reserved for ${reservationData.date} at ${reservationData.time}`,
-    });
+    const reservationPayload = {
+      confirmation_id: id,
+      customer_name: reservationData.name,
+      customer_email: reservationData.email,
+      customer_phone: reservationData.phone,
+      reservation_date: reservationData.date,
+      reservation_time: reservationData.time,
+      guest_count: parseInt(reservationData.guests),
+      special_requests: reservationData.notes || null,
+      status: 'confirmed' as const,
+    };
+
+    try {
+      await createReservationMutation.mutateAsync(reservationPayload);
+      setStep(2);
+    } catch (error) {
+      console.error("Failed to create reservation:", error);
+    }
   };
 
   if (step === 2) {
@@ -209,9 +224,10 @@ const Reservation = () => {
 
                 <Button 
                   type="submit" 
+                  disabled={createReservationMutation.isPending}
                   className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                 >
-                  Confirm Reservation
+                  {createReservationMutation.isPending ? "Processing..." : "Confirm Reservation"}
                 </Button>
               </form>
             </CardContent>

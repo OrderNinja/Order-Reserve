@@ -1,57 +1,19 @@
 
 import { useState } from "react";
-import { Clock, CheckCircle, AlertCircle, Eye } from "lucide-react";
+import { Clock, CheckCircle, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { useOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 
 const AdminOrders = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState("all");
-
-  // Mock data - will be replaced with real database data
-  const orders = [
-    { 
-      id: "ORD001", 
-      customer: "John Doe", 
-      email: "john@example.com",
-      items: [
-        { name: "Margherita Pizza", quantity: 1, price: 15.99 },
-        { name: "Caesar Salad", quantity: 1, price: 12.50 }
-      ],
-      total: 28.49, 
-      status: "preparing", 
-      time: "10:30 AM",
-      date: "2024-01-15"
-    },
-    { 
-      id: "ORD002", 
-      customer: "Jane Smith", 
-      email: "jane@example.com",
-      items: [
-        { name: "Chicken Burger", quantity: 2, price: 14.99 }
-      ],
-      total: 29.98, 
-      status: "new", 
-      time: "10:45 AM",
-      date: "2024-01-15"
-    },
-    { 
-      id: "ORD003", 
-      customer: "Mike Johnson", 
-      email: "mike@example.com",
-      items: [
-        { name: "Pasta Carbonara", quantity: 1, price: 18.50 },
-        { name: "Garlic Bread", quantity: 2, price: 8.99 }
-      ],
-      total: 36.48, 
-      status: "ready", 
-      time: "11:00 AM",
-      date: "2024-01-15"
-    },
-  ];
+  
+  const { data: orders = [], isLoading } = useOrders();
+  const updateOrderStatusMutation = useUpdateOrderStatus();
 
   const filteredOrders = selectedStatus === "all" 
     ? orders 
@@ -63,6 +25,7 @@ const AdminOrders = () => {
       preparing: { label: "Preparing", className: "bg-yellow-100 text-yellow-800" },
       ready: { label: "Ready", className: "bg-green-100 text-green-800" },
       served: { label: "Served", className: "bg-gray-100 text-gray-800" },
+      cancelled: { label: "Cancelled", className: "bg-red-100 text-red-800" },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
@@ -74,10 +37,31 @@ const AdminOrders = () => {
     );
   };
 
-  const updateOrderStatus = (orderId: string, newStatus: string) => {
-    console.log(`Updating order ${orderId} to status: ${newStatus}`);
-    // This will be replaced with actual API call
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      await updateOrderStatusMutation.mutateAsync({
+        id: orderId,
+        status: newStatus as any
+      });
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+    }
   };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading orders...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -137,25 +121,25 @@ const AdminOrders = () => {
                 <TableBody>
                   {filteredOrders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell className="font-medium">{order.order_number}</TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{order.customer}</div>
-                          <div className="text-sm text-gray-500">{order.email}</div>
+                          <div className="font-medium">{order.customer_name}</div>
+                          <div className="text-sm text-gray-500">{order.customer_email}</div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          {order.items.map((item, index) => (
+                          {order.order_items?.map((item, index) => (
                             <div key={index} className="text-sm">
-                              {item.quantity}x {item.name}
+                              {item.quantity}x {item.menu_items?.name || 'Unknown Item'}
                             </div>
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell>${order.total}</TableCell>
+                      <TableCell>${order.total_amount}</TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell>{order.time}</TableCell>
+                      <TableCell>{formatTime(order.created_at)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline">
@@ -165,6 +149,7 @@ const AdminOrders = () => {
                             <Button 
                               size="sm" 
                               onClick={() => updateOrderStatus(order.id, "preparing")}
+                              disabled={updateOrderStatusMutation.isPending}
                             >
                               <Clock className="w-4 h-4 mr-1" />
                               Start
@@ -174,6 +159,7 @@ const AdminOrders = () => {
                             <Button 
                               size="sm" 
                               onClick={() => updateOrderStatus(order.id, "ready")}
+                              disabled={updateOrderStatusMutation.isPending}
                             >
                               <CheckCircle className="w-4 h-4 mr-1" />
                               Ready
@@ -184,6 +170,7 @@ const AdminOrders = () => {
                               size="sm" 
                               variant="secondary"
                               onClick={() => updateOrderStatus(order.id, "served")}
+                              disabled={updateOrderStatusMutation.isPending}
                             >
                               Served
                             </Button>

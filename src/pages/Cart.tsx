@@ -1,11 +1,14 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, Trash2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateOrder } from "@/hooks/useOrders";
 
 interface CartItem {
   id: string;
@@ -18,25 +21,17 @@ interface CartItem {
 
 const Cart = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: "1",
-      name: "Grilled Salmon",
-      description: "Fresh Atlantic salmon with herbs and lemon",
-      price: 28.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop",
-      quantity: 2
-    },
-    {
-      id: "2",
-      name: "Caesar Salad",
-      description: "Crisp romaine lettuce with parmesan and croutons",
-      price: 14.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=100&h=100&fit=crop",
-      quantity: 1
-    }
-  ]);
+  const createOrderMutation = useCreateOrder();
+  
+  const [cartItems, setCartItems] = useState<CartItem[]>(location.state?.cartItems || []);
+  const [customerInfo, setCustomerInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    notes: ""
+  });
 
   const updateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -64,7 +59,11 @@ const Cart = () => {
     return getSubtotal() + getTax();
   };
 
-  const handleConfirmOrder = () => {
+  const generateOrderNumber = () => {
+    return 'ORD' + Date.now().toString().slice(-6) + Math.random().toString(36).substr(2, 3).toUpperCase();
+  };
+
+  const handleConfirmOrder = async () => {
     if (cartItems.length === 0) {
       toast({
         title: "Cart is empty",
@@ -74,21 +73,43 @@ const Cart = () => {
       return;
     }
 
-    // Here you would normally send the order to your database
-    console.log("Order confirmed:", {
-      items: cartItems,
-      subtotal: getSubtotal(),
-      tax: getTax(),
-      total: getTotal(),
-      timestamp: new Date().toISOString()
-    });
+    if (!customerInfo.name || !customerInfo.email) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in your name and email.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    toast({
-      title: "Order Confirmed!",
-      description: "Your order is being prepared.",
-    });
+    const orderData = {
+      order_number: generateOrderNumber(),
+      customer_name: customerInfo.name,
+      customer_email: customerInfo.email,
+      customer_phone: customerInfo.phone || null,
+      status: 'new' as const,
+      total_amount: getTotal(),
+      notes: customerInfo.notes || null,
+    };
 
-    navigate("/order-confirmation");
+    const orderItems = cartItems.map(item => ({
+      menu_item_id: item.id,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    try {
+      await createOrderMutation.mutateAsync({ orderData, items: orderItems });
+      navigate("/order-confirmation", { 
+        state: { 
+          orderNumber: orderData.order_number,
+          total: getTotal(),
+          customerName: customerInfo.name 
+        } 
+      });
+    } catch (error) {
+      console.error("Failed to create order:", error);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -139,7 +160,7 @@ const Cart = () => {
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Order Items</CardTitle>
@@ -191,6 +212,57 @@ const Cart = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Customer Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Customer Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={customerInfo.name}
+                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter your full name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={customerInfo.email}
+                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Special Requests</Label>
+                    <Input
+                      id="notes"
+                      value={customerInfo.notes}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Any special requests or allergies"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Order Summary */}
@@ -218,10 +290,11 @@ const Cart = () => {
 
                   <Button
                     onClick={handleConfirmOrder}
+                    disabled={createOrderMutation.isPending}
                     className="w-full mt-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                   >
                     <CheckCircle className="w-5 h-5 mr-2" />
-                    Confirm Order
+                    {createOrderMutation.isPending ? "Processing..." : "Confirm Order"}
                   </Button>
                 </CardContent>
               </Card>

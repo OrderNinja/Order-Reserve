@@ -5,83 +5,23 @@ import { ArrowLeft, ShoppingCart, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useMenuItems } from "@/hooks/useMenuItems";
 
-interface MenuItem {
+interface CartItem {
   id: string;
   name: string;
   description: string;
   price: number;
   image: string;
-  category: string;
-  available: boolean;
-}
-
-interface CartItem extends MenuItem {
   quantity: number;
 }
 
 const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const { data: menuItems = [], isLoading } = useMenuItems();
 
-  const menuItems: MenuItem[] = [
-    {
-      id: "1",
-      name: "Grilled Salmon",
-      description: "Fresh Atlantic salmon with herbs and lemon",
-      price: 28.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop",
-      category: "Main Course",
-      available: true
-    },
-    {
-      id: "2",
-      name: "Caesar Salad",
-      description: "Crisp romaine lettuce with parmesan and croutons",
-      price: 14.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop",
-      category: "Appetizers",
-      available: true
-    },
-    {
-      id: "3",
-      name: "Ribeye Steak",
-      description: "Premium cut with garlic butter and herbs",
-      price: 42.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop",
-      category: "Main Course",
-      available: true
-    },
-    {
-      id: "4",
-      name: "Chocolate Cake",
-      description: "Rich chocolate cake with berry compote",
-      price: 12.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop",
-      category: "Desserts",
-      available: true
-    },
-    {
-      id: "5",
-      name: "Margherita Pizza",
-      description: "Fresh tomatoes, mozzarella, and basil",
-      price: 18.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop",
-      category: "Main Course",
-      available: true
-    },
-    {
-      id: "6",
-      name: "Bruschetta",
-      description: "Toasted bread with tomatoes and garlic",
-      price: 9.99,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop",
-      category: "Appetizers",
-      available: true
-    }
-  ];
-
-  const categories = ["All", "Appetizers", "Main Course", "Desserts"];
+  const categories = ["All", ...Array.from(new Set(menuItems.map(item => item.category)))];
 
   const filteredItems = selectedCategory === "All" 
     ? menuItems 
@@ -104,12 +44,19 @@ const Menu = () => {
     }
   };
 
-  const addToCart = (menuItem: MenuItem) => {
+  const addToCart = (menuItem: any) => {
     const existingItem = cart.find(item => item.id === menuItem.id);
     if (existingItem) {
       updateQuantity(menuItem.id, existingItem.quantity + 1);
     } else {
-      setCart([...cart, { ...menuItem, quantity: 1 }]);
+      setCart([...cart, { 
+        id: menuItem.id,
+        name: menuItem.name,
+        description: menuItem.description,
+        price: menuItem.price,
+        image: menuItem.image_url,
+        quantity: 1 
+      }]);
     }
   };
 
@@ -117,6 +64,14 @@ const Menu = () => {
     const item = cart.find(cartItem => cartItem.id === itemId);
     return item ? item.quantity : 0;
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading menu...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
@@ -150,12 +105,12 @@ const Menu = () => {
 
         {/* Category Filter */}
         <div className="flex justify-center mb-8">
-          <div className="flex space-x-2 bg-white rounded-full p-2 shadow-sm">
+          <div className="flex space-x-2 bg-white rounded-full p-2 shadow-sm flex-wrap justify-center">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
                   selectedCategory === category
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white"
                     : "text-gray-600 hover:text-orange-600"
@@ -173,7 +128,7 @@ const Menu = () => {
             <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="aspect-video overflow-hidden">
                 <img
-                  src={item.image}
+                  src={item.image_url || "/placeholder.svg"}
                   alt={item.name}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
@@ -185,7 +140,11 @@ const Menu = () => {
                 </div>
                 <p className="text-gray-600 text-sm mb-4">{item.description}</p>
                 
-                {getItemQuantity(item.id) > 0 ? (
+                {!item.available ? (
+                  <Badge variant="secondary" className="bg-red-100 text-red-800 w-full justify-center">
+                    Unavailable
+                  </Badge>
+                ) : getItemQuantity(item.id) > 0 ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Button
@@ -212,7 +171,6 @@ const Menu = () => {
                   <Button
                     onClick={() => addToCart(item)}
                     className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
-                    disabled={!item.available}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Cart
@@ -226,7 +184,7 @@ const Menu = () => {
         {/* Go to Cart Button */}
         {getTotalItems() > 0 && (
           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-            <Link to="/cart">
+            <Link to="/cart" state={{ cartItems: cart }}>
               <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-3 rounded-full shadow-lg">
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Go to Cart ({getTotalItems()})

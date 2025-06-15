@@ -6,72 +6,56 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { useMenuItems, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/useMenuItems";
 
 const AdminMenu = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("all");
-
-  // Mock data - will be replaced with real database data
-  const menuItems = [
-    {
-      id: 1,
-      name: "Margherita Pizza",
-      description: "Fresh tomatoes, mozzarella, basil",
-      price: 15.99,
-      category: "pizza",
-      image: "/placeholder.svg",
-      available: true
-    },
-    {
-      id: 2,
-      name: "Chicken Burger",
-      description: "Grilled chicken, lettuce, tomato, mayo",
-      price: 14.99,
-      category: "burgers",
-      image: "/placeholder.svg",
-      available: true
-    },
-    {
-      id: 3,
-      name: "Caesar Salad",
-      description: "Romaine lettuce, parmesan, croutons, caesar dressing",
-      price: 12.50,
-      category: "salads",
-      image: "/placeholder.svg",
-      available: false
-    },
-    {
-      id: 4,
-      name: "Pasta Carbonara",
-      description: "Spaghetti with eggs, pancetta, parmesan",
-      price: 18.50,
-      category: "pasta",
-      image: "/placeholder.svg",
-      available: true
-    },
-  ];
+  
+  const { data: menuItems = [], isLoading } = useMenuItems();
+  const updateMenuItemMutation = useUpdateMenuItem();
+  const deleteMenuItemMutation = useDeleteMenuItem();
 
   const categories = [
     { key: "all", label: "All Items" },
-    { key: "pizza", label: "Pizza" },
-    { key: "burgers", label: "Burgers" },
-    { key: "salads", label: "Salads" },
-    { key: "pasta", label: "Pasta" }
+    ...Array.from(new Set(menuItems.map(item => item.category))).map(cat => ({
+      key: cat,
+      label: cat.charAt(0).toUpperCase() + cat.slice(1)
+    }))
   ];
 
   const filteredItems = selectedCategory === "all" 
     ? menuItems 
     : menuItems.filter(item => item.category === selectedCategory);
 
-  const toggleAvailability = (itemId: number) => {
-    console.log(`Toggling availability for item ${itemId}`);
-    // This will be replaced with actual API call
+  const toggleAvailability = async (itemId: string, currentAvailability: boolean) => {
+    try {
+      await updateMenuItemMutation.mutateAsync({
+        id: itemId,
+        updates: { available: !currentAvailability }
+      });
+    } catch (error) {
+      console.error('Failed to update item availability:', error);
+    }
   };
 
-  const deleteItem = (itemId: number) => {
-    console.log(`Deleting item ${itemId}`);
-    // This will be replaced with actual API call
+  const deleteItem = async (itemId: string) => {
+    if (window.confirm('Are you sure you want to delete this menu item?')) {
+      try {
+        await deleteMenuItemMutation.mutateAsync(itemId);
+      } catch (error) {
+        console.error('Failed to delete item:', error);
+      }
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading menu items...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -133,7 +117,15 @@ const AdminMenu = () => {
                     <TableRow key={item.id}>
                       <TableCell>
                         <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Image className="w-6 h-6 text-gray-400" />
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <Image className="w-6 h-6 text-gray-400" />
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{item.name}</TableCell>
@@ -159,7 +151,8 @@ const AdminMenu = () => {
                           <Button 
                             size="sm" 
                             variant={item.available ? "secondary" : "default"}
-                            onClick={() => toggleAvailability(item.id)}
+                            onClick={() => toggleAvailability(item.id, item.available)}
+                            disabled={updateMenuItemMutation.isPending}
                           >
                             {item.available ? "Disable" : "Enable"}
                           </Button>
@@ -167,6 +160,7 @@ const AdminMenu = () => {
                             size="sm" 
                             variant="destructive"
                             onClick={() => deleteItem(item.id)}
+                            disabled={deleteMenuItemMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
