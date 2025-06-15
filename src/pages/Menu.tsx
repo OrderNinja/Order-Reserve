@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Plus, Minus } from "lucide-react";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMenuItems } from "@/hooks/useMenuItems";
+import MenuItemOptions from "@/components/MenuItemOptions";
 
 interface CartItem {
   id: string;
@@ -14,11 +14,14 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  options?: any;
 }
 
 const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showOptions, setShowOptions] = useState(false);
   const { data: menuItems = [], isLoading } = useMenuItems();
 
   const categories = ["All", ...Array.from(new Set(menuItems.map(item => item.category)))];
@@ -44,18 +47,24 @@ const Menu = () => {
     }
   };
 
-  const addToCart = (menuItem: any) => {
+  const openOptionsDialog = (menuItem: any) => {
+    setSelectedItem(menuItem);
+    setShowOptions(true);
+  };
+
+  const addToCart = (menuItem: any, options?: any) => {
     const existingItem = cart.find(item => item.id === menuItem.id);
     if (existingItem) {
-      updateQuantity(menuItem.id, existingItem.quantity + 1);
+      updateQuantity(menuItem.id, existingItem.quantity + (menuItem.quantity || 1));
     } else {
       setCart([...cart, { 
         id: menuItem.id,
         name: menuItem.name,
         description: menuItem.description,
-        price: menuItem.price,
+        price: menuItem.totalPrice || menuItem.price,
         image: menuItem.image_url,
-        quantity: 1 
+        quantity: menuItem.quantity || 1,
+        options: options || {}
       }]);
     }
   };
@@ -169,7 +178,7 @@ const Menu = () => {
                   </div>
                 ) : (
                   <Button
-                    onClick={() => addToCart(item)}
+                    onClick={() => openOptionsDialog(item)}
                     className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -193,6 +202,16 @@ const Menu = () => {
           </div>
         )}
       </div>
+
+      {/* Options Dialog */}
+      {selectedItem && (
+        <MenuItemOptions
+          item={selectedItem}
+          isOpen={showOptions}
+          onClose={() => setShowOptions(false)}
+          onAddToCart={addToCart}
+        />
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminMenu from "./pages/admin/AdminMenu";
 import AdminRestaurant from "./pages/admin/AdminRestaurant";
 import NotFound from "./pages/NotFound";
+import AdminReservations from "./pages/admin/AdminReservations";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +33,7 @@ const App = () => {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/menu" element={<AdminMenu />} />
+            <Route path="/admin/reservations" element={<AdminReservations />} />
             <Route path="/admin/restaurant" element={<AdminRestaurant />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

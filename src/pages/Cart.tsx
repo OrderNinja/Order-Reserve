@@ -1,12 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, Trash2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateOrder } from "@/hooks/useOrders";
 
@@ -17,6 +14,7 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  options?: any;
 }
 
 const Cart = () => {
@@ -26,12 +24,6 @@ const Cart = () => {
   const createOrderMutation = useCreateOrder();
   
   const [cartItems, setCartItems] = useState<CartItem[]>(location.state?.cartItems || []);
-  const [customerInfo, setCustomerInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    notes: ""
-  });
 
   const updateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -73,23 +65,14 @@ const Cart = () => {
       return;
     }
 
-    if (!customerInfo.name || !customerInfo.email) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in your name and email.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     const orderData = {
       order_number: generateOrderNumber(),
-      customer_name: customerInfo.name,
-      customer_email: customerInfo.email,
-      customer_phone: customerInfo.phone || null,
+      customer_name: "Walk-in Customer", // Default customer name
+      customer_email: "walkin@restaurant.com", // Default email
+      customer_phone: null,
       status: 'new' as const,
       total_amount: getTotal(),
-      notes: customerInfo.notes || null,
+      notes: null,
     };
 
     const orderItems = cartItems.map(item => ({
@@ -104,7 +87,7 @@ const Cart = () => {
         state: { 
           orderNumber: orderData.order_number,
           total: getTotal(),
-          customerName: customerInfo.name 
+          customerName: orderData.customer_name 
         } 
       });
     } catch (error) {
@@ -178,6 +161,16 @@ const Cart = () => {
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
                           <p className="text-sm text-gray-600">{item.description}</p>
+                          
+                          {/* Display options if any */}
+                          {item.options && Object.keys(item.options.selectedOptions || {}).length > 0 && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {Object.entries(item.options.selectedOptions).map(([key, value]) => (
+                                <span key={key} className="mr-2">{key}: {value}</span>
+                              ))}
+                            </div>
+                          )}
+                          
                           <p className="text-lg font-bold text-orange-600">${item.price}</p>
                         </div>
 
@@ -212,57 +205,6 @@ const Cart = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Customer Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Customer Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Full Name *</Label>
-                      <Input
-                        id="name"
-                        value={customerInfo.name}
-                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter your full name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={customerInfo.email}
-                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="Enter your email"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="notes">Special Requests</Label>
-                    <Input
-                      id="notes"
-                      value={customerInfo.notes}
-                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Any special requests or allergies"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Order Summary */}
@@ -294,7 +236,7 @@ const Cart = () => {
                     className="w-full mt-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                   >
                     <CheckCircle className="w-5 h-5 mr-2" />
-                    {createOrderMutation.isPending ? "Processing..." : "Confirm Order"}
+                    {createOrderMutation.isPending ? "Processing..." : "Place Order"}
                   </Button>
                 </CardContent>
               </Card>
