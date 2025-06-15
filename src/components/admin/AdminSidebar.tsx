@@ -1,6 +1,5 @@
-
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, ShoppingBag, Menu as MenuIcon, Settings, Utensils } from "lucide-react";
+import { BarChart3, ShoppingBag, Menu as MenuIcon, Settings, Utensils, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +23,12 @@ const AdminSidebar = ({ isOpen, onToggle }: AdminSidebarProps) => {
       icon: ShoppingBag,
       href: "/admin/orders",
       isActive: location.pathname === "/admin/orders"
+    },
+    {
+      title: "Reservations",
+      icon: Calendar,
+      href: "/admin/reservations",
+      isActive: location.pathname === "/admin/reservations"
     },
     {
       title: "Menu",

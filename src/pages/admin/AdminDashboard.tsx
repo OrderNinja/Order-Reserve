@@ -150,7 +150,9 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Today's Reservations
-                  <Button variant="outline" size="sm">View All</Button>
+                  <Link to="/admin/reservations">
+                    <Button variant="outline" size="sm">View All</Button>
+                  </Link>
                 </CardTitle>
               </CardHeader>
               <CardContent>
