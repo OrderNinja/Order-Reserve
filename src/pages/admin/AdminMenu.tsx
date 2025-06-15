@@ -1,11 +1,11 @@
-
 import { useState } from "react";
-import { Plus, Edit, Trash2, Image } from "lucide-react";
+import { Edit, Trash2, Image } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AddMenuItemDialog from "@/components/admin/AddMenuItemDialog";
 import { useMenuItems, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/useMenuItems";
 
 const AdminMenu = () => {
@@ -65,10 +65,7 @@ const AdminMenu = () => {
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Menu Management</h1>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Item
-            </Button>
+            <AddMenuItemDialog />
           </div>
         </header>
 

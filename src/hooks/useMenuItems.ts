@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +25,38 @@ export const useMenuItems = () => {
       
       if (error) throw error;
       return data as MenuItem[];
+    },
+  });
+};
+
+export const useCreateMenuItem = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (newItem: Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .insert([newItem])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menu-items'] });
+      toast({
+        title: "Menu item created",
+        description: "The new menu item has been added successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create menu item: " + error.message,
+        variant: "destructive",
+      });
     },
   });
 };
