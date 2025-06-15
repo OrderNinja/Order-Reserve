@@ -135,7 +135,7 @@ const AdminMenu = () => {
                           {item.category}
                         </Badge>
                       </TableCell>
-                      <TableCell>${item.price}</TableCell>
+                      <TableCell>฿{item.price}</TableCell>
                       <TableCell>
                         <Badge 
                           className={item.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}

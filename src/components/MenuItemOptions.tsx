@@ -32,24 +32,24 @@ const MenuItemOptions = ({ item, isOpen, onClose, onAddToCart }: MenuItemOptions
         { id: "mild", label: "Mild", price: 0 },
         { id: "medium", label: "Medium", price: 0 },
         { id: "hot", label: "Hot", price: 0 },
-        { id: "extra-hot", label: "Extra Hot", price: 0.5 }
+        { id: "extra-hot", label: "Extra Hot", price: 10 }
       ]
     },
     size: {
       title: "Size",
       choices: [
         { id: "regular", label: "Regular", price: 0 },
-        { id: "large", label: "Large", price: 3.00 }
+        { id: "large", label: "Large", price: 30 }
       ]
     }
   };
 
   const addOns = [
-    { id: "extra-cheese", label: "Extra Cheese", price: 2.50 },
-    { id: "bacon", label: "Bacon", price: 3.00 },
-    { id: "avocado", label: "Avocado", price: 2.00 },
-    { id: "mushrooms", label: "Mushrooms", price: 1.50 },
-    { id: "extra-sauce", label: "Extra Sauce", price: 0.75 }
+    { id: "extra-cheese", label: "Extra Cheese", price: 25 },
+    { id: "bacon", label: "Bacon", price: 30 },
+    { id: "avocado", label: "Avocado", price: 20 },
+    { id: "mushrooms", label: "Mushrooms", price: 15 },
+    { id: "extra-sauce", label: "Extra Sauce", price: 8 }
   ];
 
   const handleOptionChange = (optionType: string, choiceId: string) => {
@@ -125,7 +125,7 @@ const MenuItemOptions = ({ item, isOpen, onClose, onAddToCart }: MenuItemOptions
             <div className="flex-1">
               <h3 className="font-semibold">{item.name}</h3>
               <p className="text-sm text-gray-600">{item.description}</p>
-              <p className="text-lg font-bold text-orange-600">${item.price}</p>
+              <p className="text-lg font-bold text-[#951713]">฿{item.price}</p>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ const MenuItemOptions = ({ item, isOpen, onClose, onAddToCart }: MenuItemOptions
                     key={choice.id}
                     className={`cursor-pointer transition-colors ${
                       selectedOptions[optionType] === choice.id
-                        ? 'ring-2 ring-orange-500 bg-orange-50'
+                        ? 'ring-2 ring-[#951713] bg-red-50'
                         : 'hover:bg-gray-50'
                     }`}
                     onClick={() => handleOptionChange(optionType, choice.id)}
@@ -170,7 +170,7 @@ const MenuItemOptions = ({ item, isOpen, onClose, onAddToCart }: MenuItemOptions
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">{choice.label}</span>
                         {choice.price > 0 && (
-                          <Badge variant="secondary">+${choice.price}</Badge>
+                          <Badge variant="secondary">+฿{choice.price}</Badge>
                         )}
                       </div>
                     </CardContent>
@@ -188,7 +188,7 @@ const MenuItemOptions = ({ item, isOpen, onClose, onAddToCart }: MenuItemOptions
                 <div key={addOn.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <span className="font-medium">{addOn.label}</span>
-                    <Badge variant="secondary" className="ml-2">+${addOn.price}</Badge>
+                    <Badge variant="secondary" className="ml-2">+฿{addOn.price}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -216,11 +216,11 @@ const MenuItemOptions = ({ item, isOpen, onClose, onAddToCart }: MenuItemOptions
           <div className="border-t pt-4">
             <div className="flex justify-between items-center mb-4">
               <span className="text-lg font-semibold">Total:</span>
-              <span className="text-xl font-bold text-orange-600">${calculateTotalPrice().toFixed(2)}</span>
+              <span className="text-xl font-bold text-[#951713]">฿{calculateTotalPrice().toFixed(2)}</span>
             </div>
             <Button
               onClick={handleAddToCart}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+              className="w-full bg-gradient-to-r from-[#951713] to-red-700 hover:from-red-800 hover:to-red-900 text-white"
             >
               Add to Cart
             </Button>

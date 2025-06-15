@@ -52,7 +52,7 @@ const Cart = () => {
   };
 
   const getTax = () => {
-    return getSubtotal() * 0.08; // 8% tax
+    return getSubtotal() * 0.07; // 7% VAT for Thailand
   };
 
   const getTotal = () => {
@@ -105,10 +105,10 @@ const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-        <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
           <div className="container mx-auto px-4 py-4 flex items-center">
-            <Link to="/menu" className="flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+            <Link to="/menu" className="flex items-center text-gray-600 hover:text-[#951713] transition-colors">
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Menu
             </Link>
@@ -123,7 +123,7 @@ const Cart = () => {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
             <p className="text-gray-600 mb-6">Add some delicious items from our menu</p>
             <Link to="/menu">
-              <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white">
+              <Button className="bg-gradient-to-r from-[#951713] to-red-700 hover:from-red-800 hover:to-red-900 text-white">
                 Browse Menu
               </Button>
             </Link>
@@ -134,11 +134,11 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-4 flex items-center">
-          <Link to="/menu" className="flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+          <Link to="/menu" className="flex items-center text-gray-600 hover:text-[#951713] transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Menu
           </Link>
@@ -179,8 +179,8 @@ const Cart = () => {
                             </div>
                           )}
                           
-                          <p className="text-lg font-bold text-orange-600">
-                            ${(item.price + (item.options?.totalAddOnPrice || 0)).toFixed(2)}
+                          <p className="text-lg font-bold text-[#951713]">
+                            ฿{(item.price + (item.options?.totalAddOnPrice || 0)).toFixed(2)}
                           </p>
                         </div>
 
@@ -227,23 +227,23 @@ const Cart = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${getSubtotal().toFixed(2)}</span>
+                      <span>฿{getSubtotal().toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Tax</span>
-                      <span>${getTax().toFixed(2)}</span>
+                      <span>VAT (7%)</span>
+                      <span>฿{getTax().toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Total</span>
-                      <span>${getTotal().toFixed(2)}</span>
+                      <span>฿{getTotal().toFixed(2)}</span>
                     </div>
                   </div>
 
                   <Button
                     onClick={handleConfirmOrder}
                     disabled={createOrderMutation.isPending}
-                    className="w-full mt-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                    className="w-full mt-6 bg-gradient-to-r from-[#951713] to-red-700 hover:from-red-800 hover:to-red-900 text-white"
                   >
                     <CheckCircle className="w-5 h-5 mr-2" />
                     {createOrderMutation.isPending ? "Processing..." : "Place Order"}
