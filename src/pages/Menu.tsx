@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,18 @@ interface CartItem {
 
 const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const savedCart = localStorage.getItem('cartItems');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showOptions, setShowOptions] = useState(false);
   const { data: menuItems = [], isLoading } = useMenuItems();
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(cart));
+  }, [cart]);
 
   const categories = ["All", ...Array.from(new Set(menuItems.map(item => item.category)))];
 
@@ -54,9 +62,15 @@ const Menu = () => {
   };
 
   const addToCart = (menuItem: any, options?: any) => {
-    const existingItem = cart.find(item => item.id === menuItem.id);
+    const cartItemKey = `${menuItem.id}-${JSON.stringify(options?.selectedOptions || {})}-${JSON.stringify(options?.selectedAddOns || {})}`;
+    const existingItem = cart.find(item => 
+      item.id === menuItem.id && 
+      JSON.stringify(item.options?.selectedOptions || {}) === JSON.stringify(options?.selectedOptions || {}) &&
+      JSON.stringify(item.options?.selectedAddOns || {}) === JSON.stringify(options?.selectedAddOns || {})
+    );
+    
     if (existingItem) {
-      updateQuantity(menuItem.id, existingItem.quantity + (menuItem.quantity || 1));
+      updateQuantity(existingItem.id, existingItem.quantity + (menuItem.quantity || 1));
     } else {
       setCart([...cart, { 
         id: menuItem.id,
@@ -71,8 +85,8 @@ const Menu = () => {
   };
 
   const getItemQuantity = (itemId: string) => {
-    const item = cart.find(cartItem => cartItem.id === itemId);
-    return item ? item.quantity : 0;
+    const items = cart.filter(cartItem => cartItem.id === itemId);
+    return items.reduce((total, item) => total + item.quantity, 0);
   };
 
   if (isLoading) {
@@ -93,7 +107,7 @@ const Menu = () => {
             Back to Home
           </Link>
           
-          <Link to="/cart" className="relative">
+          <Link to="/cart" state={{ cartItems: cart }}>
             <Button variant="outline" className="relative">
               <ShoppingCart className="w-5 h-5 mr-2" />
               Cart
@@ -160,7 +174,12 @@ const Menu = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                        onClick={() => {
+                          const firstItemInCart = cart.find(cartItem => cartItem.id === item.id);
+                          if (firstItemInCart) {
+                            updateQuantity(firstItemInCart.id, firstItemInCart.quantity - 1);
+                          }
+                        }}
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
@@ -168,7 +187,7 @@ const Menu = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
+                        onClick={() => addToCart(item)}
                       >
                         <Plus className="w-4 h-4" />
                       </Button>

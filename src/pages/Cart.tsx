@@ -17,6 +17,7 @@ interface CartItem {
   quantity: number;
   options?: {
     selectedOptions: Record<string, string>;
+    selectedAddOns: Record<string, number>;
     totalAddOnPrice: number;
   };
 }
@@ -27,7 +28,19 @@ const Cart = () => {
   const { toast } = useToast();
   const createOrderMutation = useCreateOrder();
   
-  const [cartItems, setCartItems] = useState<CartItem[]>(location.state?.cartItems || []);
+  // Initialize cart items from location state or localStorage
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    if (location.state?.cartItems) {
+      return location.state.cartItems;
+    }
+    const savedCart = localStorage.getItem('cartItems');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  // Save cart items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const updateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -75,8 +88,8 @@ const Cart = () => {
 
     const orderData = {
       order_number: generateOrderNumber(),
-      customer_name: "Walk-in Customer", // Default customer name
-      customer_email: "walkin@restaurant.com", // Default email
+      customer_name: "Walk-in Customer",
+      customer_email: "walkin@restaurant.com",
       customer_phone: null,
       status: 'new' as const,
       total_amount: getTotal(),
@@ -91,6 +104,10 @@ const Cart = () => {
 
     try {
       await createOrderMutation.mutateAsync({ orderData, items: orderItems });
+      // Clear cart after successful order
+      setCartItems([]);
+      localStorage.removeItem('cartItems');
+      
       navigate("/order-confirmation", { 
         state: { 
           orderNumber: orderData.order_number,
@@ -158,10 +175,10 @@ const Cart = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {cartItems.map((item) => (
-                      <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg">
+                    {cartItems.map((item, index) => (
+                      <div key={`${item.id}-${index}`} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg">
                         <img
-                          src={item.image}
+                          src={item.image || "/placeholder.svg"}
                           alt={item.name}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
@@ -171,11 +188,14 @@ const Cart = () => {
                           <p className="text-sm text-gray-600">{item.description}</p>
                           
                           {/* Display options if any */}
-                          {item.options && Object.keys(item.options.selectedOptions || {}).length > 0 && (
+                          {item.options && (
                             <div className="text-xs text-gray-500 mt-1">
-                              {Object.entries(item.options.selectedOptions).map(([key, value]) => (
-                                <span key={key} className="mr-2">{key}: {String(value)}</span>
-                              ))}
+                              {Object.keys(item.options.selectedOptions || {}).length > 0 && (
+                                <div>Options: {Object.values(item.options.selectedOptions).join(", ")}</div>
+                              )}
+                              {Object.keys(item.options.selectedAddOns || {}).length > 0 && (
+                                <div>Add-ons: {Object.entries(item.options.selectedAddOns).map(([key, qty]) => `${key} (${qty})`).join(", ")}</div>
+                              )}
                             </div>
                           )}
                           

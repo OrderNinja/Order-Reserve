@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AddMenuItemDialog from "@/components/admin/AddMenuItemDialog";
 import { useMenuItems, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/useMenuItems";
+import MenuItemOptionsDialog from "@/components/admin/MenuItemOptionsDialog";
 
 const AdminMenu = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -142,6 +143,10 @@ const AdminMenu = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <MenuItemOptionsDialog 
+                            menuItemId={item.id} 
+                            menuItemName={item.name} 
+                          />
                           <Button size="sm" variant="outline">
                             <Edit className="w-4 h-4" />
                           </Button>
