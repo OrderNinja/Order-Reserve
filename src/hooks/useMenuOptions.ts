@@ -36,7 +36,8 @@ export const useMenuOptions = (menuItemId?: string) => {
   return useQuery({
     queryKey: ['menu-options', menuItemId],
     queryFn: async () => {
-      const { data: categories, error: categoriesError } = await supabase
+      // Use type assertion to bypass TypeScript checking for new tables
+      const { data: categories, error: categoriesError } = await (supabase as any)
         .from('menu_option_categories')
         .select(`
           *,
@@ -47,7 +48,7 @@ export const useMenuOptions = (menuItemId?: string) => {
       
       if (categoriesError) throw categoriesError;
 
-      const { data: addOns, error: addOnsError } = await supabase
+      const { data: addOns, error: addOnsError } = await (supabase as any)
         .from('menu_add_ons')
         .select('*')
         .eq('menu_item_id', menuItemId)
@@ -55,7 +56,10 @@ export const useMenuOptions = (menuItemId?: string) => {
       
       if (addOnsError) throw addOnsError;
 
-      return { categories: categories as MenuOptionCategory[], addOns: addOns as MenuAddOn[] };
+      return { 
+        categories: categories as MenuOptionCategory[], 
+        addOns: addOns as MenuAddOn[] 
+      };
     },
     enabled: !!menuItemId,
   });
@@ -67,7 +71,7 @@ export const useCreateOptionCategory = () => {
 
   return useMutation({
     mutationFn: async (newCategory: Omit<MenuOptionCategory, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('menu_option_categories')
         .insert([newCategory])
         .select()
@@ -83,7 +87,7 @@ export const useCreateOptionCategory = () => {
         description: "The new option category has been added successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: "Failed to create option category: " + error.message,
@@ -99,7 +103,7 @@ export const useCreateAddOn = () => {
 
   return useMutation({
     mutationFn: async (newAddOn: Omit<MenuAddOn, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('menu_add_ons')
         .insert([newAddOn])
         .select()
@@ -115,7 +119,7 @@ export const useCreateAddOn = () => {
         description: "The new add-on has been added successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: "Failed to create add-on: " + error.message,
