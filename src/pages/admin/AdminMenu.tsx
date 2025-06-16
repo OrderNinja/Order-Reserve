@@ -1,11 +1,13 @@
+
 import { useState } from "react";
-import { Edit, Trash2, Image } from "lucide-react";
+import { Trash2, Image } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AddMenuItemDialog from "@/components/admin/AddMenuItemDialog";
+import EditMenuItemDialog from "@/components/admin/EditMenuItemDialog";
 import { useMenuItems, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/useMenuItems";
 import MenuItemOptionsDialog from "@/components/admin/MenuItemOptionsDialog";
 
@@ -147,9 +149,7 @@ const AdminMenu = () => {
                             menuItemId={item.id} 
                             menuItemName={item.name} 
                           />
-                          <Button size="sm" variant="outline">
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                          <EditMenuItemDialog menuItem={item} />
                           <Button 
                             size="sm" 
                             variant={item.available ? "secondary" : "default"}

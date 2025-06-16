@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMenuOptions, useCreateOptionCategory, useCreateAddOn } from "@/hooks/useMenuOptions";
+import { useMenuOptions, useCreateAddOn, useDeleteAddOn } from "@/hooks/useMenuOptions";
 
 interface MenuItemOptionsDialogProps {
   menuItemId: string;
@@ -16,8 +16,9 @@ const MenuItemOptionsDialog = ({ menuItemId, menuItemName }: MenuItemOptionsDial
   const [open, setOpen] = useState(false);
   const [newAddOn, setNewAddOn] = useState({ label: "", price: "" });
   
-  const { data: options, isLoading } = useMenuOptions(menuItemId);
+  const { data: options, isLoading, error } = useMenuOptions(menuItemId);
   const createAddOnMutation = useCreateAddOn();
+  const deleteAddOnMutation = useDeleteAddOn();
 
   const handleAddOnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +38,42 @@ const MenuItemOptionsDialog = ({ menuItemId, menuItemName }: MenuItemOptionsDial
     }
   };
 
+  const handleDeleteAddOn = async (addOnId: string) => {
+    if (window.confirm('Are you sure you want to delete this add-on?')) {
+      try {
+        await deleteAddOnMutation.mutateAsync(addOnId);
+      } catch (error) {
+        console.error('Failed to delete add-on:', error);
+      }
+    }
+  };
+
   if (isLoading) {
     return null;
+  }
+
+  // Show error message if database tables don't exist
+  if (error) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Settings className="w-4 h-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Database Setup Required</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-sm text-gray-600">
+              The menu options feature requires database tables to be created. 
+              Please run the database migration first.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
@@ -71,7 +106,13 @@ const MenuItemOptionsDialog = ({ menuItemId, menuItemName }: MenuItemOptionsDial
                           <span className="font-medium">{addOn.label}</span>
                           <span className="ml-2 text-sm text-gray-600">฿{addOn.price}</span>
                         </div>
-                        <Button size="sm" variant="ghost" className="text-red-500">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-red-500"
+                          onClick={() => handleDeleteAddOn(addOn.id)}
+                          disabled={deleteAddOnMutation.isPending}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

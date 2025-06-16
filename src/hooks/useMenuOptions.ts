@@ -46,7 +46,10 @@ export const useMenuOptions = (menuItemId?: string) => {
         .eq('menu_item_id', menuItemId)
         .order('created_at', { ascending: true });
       
-      if (categoriesError) throw categoriesError;
+      if (categoriesError) {
+        console.error('Categories error:', categoriesError);
+        throw categoriesError;
+      }
 
       const { data: addOns, error: addOnsError } = await (supabase as any)
         .from('menu_add_ons')
@@ -54,7 +57,10 @@ export const useMenuOptions = (menuItemId?: string) => {
         .eq('menu_item_id', menuItemId)
         .order('created_at', { ascending: true });
       
-      if (addOnsError) throw addOnsError;
+      if (addOnsError) {
+        console.error('Add-ons error:', addOnsError);
+        throw addOnsError;
+      }
 
       return { 
         categories: categories as MenuOptionCategory[], 
@@ -71,13 +77,17 @@ export const useCreateOptionCategory = () => {
 
   return useMutation({
     mutationFn: async (newCategory: Omit<MenuOptionCategory, 'id' | 'created_at' | 'updated_at'>) => {
+      console.log('Creating category:', newCategory);
       const { data, error } = await (supabase as any)
         .from('menu_option_categories')
         .insert([newCategory])
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Category creation error:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -88,9 +98,10 @@ export const useCreateOptionCategory = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Category mutation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create option category: " + error.message,
+        description: "Failed to create option category. Make sure the database tables are created.",
         variant: "destructive",
       });
     },
@@ -103,13 +114,17 @@ export const useCreateAddOn = () => {
 
   return useMutation({
     mutationFn: async (newAddOn: Omit<MenuAddOn, 'id' | 'created_at' | 'updated_at'>) => {
+      console.log('Creating add-on:', newAddOn);
       const { data, error } = await (supabase as any)
         .from('menu_add_ons')
         .insert([newAddOn])
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Add-on creation error:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -120,9 +135,40 @@ export const useCreateAddOn = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Add-on mutation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create add-on: " + error.message,
+        description: "Failed to create add-on. Make sure the database tables are created.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useDeleteAddOn = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (addOnId: string) => {
+      const { error } = await (supabase as any)
+        .from('menu_add_ons')
+        .delete()
+        .eq('id', addOnId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menu-options'] });
+      toast({
+        title: "Add-on deleted",
+        description: "The add-on has been removed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete add-on: " + error.message,
         variant: "destructive",
       });
     },
