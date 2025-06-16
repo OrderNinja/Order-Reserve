@@ -92,7 +92,7 @@ const Menu = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
-        <div className="text-lg text-gray-600">Loading menu...</div>
+        <div className="text-lg text-gray-600">Loading menu.....</div>
       </div>
     );
   }
