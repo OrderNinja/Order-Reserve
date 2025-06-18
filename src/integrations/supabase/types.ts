@@ -192,6 +192,75 @@ export type Database = {
         }
         Relationships: []
       }
+      time_slot_exceptions: {
+        Row: {
+          created_at: string
+          end_time: string
+          exception_date: string
+          id: string
+          is_available: boolean | null
+          max_capacity: number
+          reason: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          exception_date: string
+          id?: string
+          is_available?: boolean | null
+          max_capacity?: number
+          reason?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          exception_date?: string
+          id?: string
+          is_available?: boolean | null
+          max_capacity?: number
+          reason?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      time_slots: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean | null
+          max_capacity: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          max_capacity?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          max_capacity?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
