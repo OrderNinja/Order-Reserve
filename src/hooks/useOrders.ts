@@ -9,6 +9,8 @@ export interface OrderItem {
   menu_item_id: string;
   quantity: number;
   price: number;
+  selected_options?: Record<string, any>;
+  selected_add_ons?: Record<string, any>;
   menu_items?: {
     name: string;
     description: string;
@@ -21,6 +23,7 @@ export interface Order {
   customer_name: string;
   customer_email: string;
   customer_phone?: string;
+  order_type: 'dine-in' | 'takeaway';
   status: 'new' | 'preparing' | 'ready' | 'served' | 'cancelled';
   total_amount: number;
   notes?: string;
@@ -90,7 +93,13 @@ export const useCreateOrder = () => {
   return useMutation({
     mutationFn: async ({ orderData, items }: { 
       orderData: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'order_items'>;
-      items: Array<{ menu_item_id: string; quantity: number; price: number }>;
+      items: Array<{ 
+        menu_item_id: string; 
+        quantity: number; 
+        price: number;
+        selected_options?: Record<string, any>;
+        selected_add_ons?: Record<string, any>;
+      }>;
     }) => {
       // Create the order first
       const { data: order, error: orderError } = await supabase
@@ -101,12 +110,14 @@ export const useCreateOrder = () => {
       
       if (orderError) throw orderError;
 
-      // Create order items
+      // Create order items with options
       const orderItems = items.map(item => ({
         order_id: order.id,
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
         price: item.price,
+        selected_options: item.selected_options || {},
+        selected_add_ons: item.selected_add_ons || {},
       }));
 
       const { error: itemsError } = await supabase

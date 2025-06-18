@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateOrder } from "@/hooks/useOrders";
+import OrderTypeSelector from "@/components/OrderTypeSelector";
 
 interface CartItem {
   id: string;
@@ -27,6 +28,8 @@ const Cart = () => {
   const location = useLocation();
   const { toast } = useToast();
   const createOrderMutation = useCreateOrder();
+  
+  const [orderType, setOrderType] = useState<'dine-in' | 'takeaway'>('dine-in');
   
   // Initialize cart items from location state or localStorage
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
@@ -91,6 +94,7 @@ const Cart = () => {
       customer_name: "Walk-in Customer",
       customer_email: "walkin@restaurant.com",
       customer_phone: null,
+      order_type: orderType,
       status: 'new' as const,
       total_amount: getTotal(),
       notes: null,
@@ -100,6 +104,8 @@ const Cart = () => {
       menu_item_id: item.id,
       quantity: item.quantity,
       price: item.price + (item.options?.totalAddOnPrice || 0),
+      selected_options: item.options?.selectedOptions || {},
+      selected_add_ons: item.options?.selectedAddOns || {},
     }));
 
     try {
@@ -112,7 +118,8 @@ const Cart = () => {
         state: { 
           orderNumber: orderData.order_number,
           total: getTotal(),
-          customerName: orderData.customer_name 
+          customerName: orderData.customer_name,
+          orderType: orderType
         } 
       });
     } catch (error) {
@@ -169,6 +176,19 @@ const Cart = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Order Type Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <OrderTypeSelector 
+                    selectedType={orderType}
+                    onTypeChange={setOrderType}
+                  />
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle>Order Items</CardTitle>
@@ -245,6 +265,10 @@ const Cart = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Order Type</span>
+                      <span className="font-medium capitalize">{orderType.replace('-', ' ')}</span>
+                    </div>
                     <div className="flex justify-between">
                       <span>Subtotal</span>
                       <span>฿{getSubtotal().toFixed(2)}</span>
