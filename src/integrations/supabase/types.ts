@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      menu_add_ons: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          menu_item_id: string | null
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          menu_item_id?: string | null
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          menu_item_id?: string | null
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_add_ons_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           available: boolean | null
@@ -45,6 +80,79 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_option_categories: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string | null
+          name: string
+          required: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          name: string
+          required?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          name?: string
+          required?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_option_categories_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_option_choices: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          label: string
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_option_choices_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_option_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -53,6 +161,8 @@ export type Database = {
           order_id: string | null
           price: number
           quantity: number
+          selected_add_ons: Json | null
+          selected_options: Json | null
         }
         Insert: {
           created_at?: string
@@ -61,6 +171,8 @@ export type Database = {
           order_id?: string | null
           price: number
           quantity?: number
+          selected_add_ons?: Json | null
+          selected_options?: Json | null
         }
         Update: {
           created_at?: string
@@ -69,6 +181,8 @@ export type Database = {
           order_id?: string | null
           price?: number
           quantity?: number
+          selected_add_ons?: Json | null
+          selected_options?: Json | null
         }
         Relationships: [
           {
@@ -96,6 +210,7 @@ export type Database = {
           id: string
           notes: string | null
           order_number: string
+          order_type: string | null
           status: string
           total_amount: number
           updated_at: string
@@ -108,6 +223,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number: string
+          order_type?: string | null
           status?: string
           total_amount: number
           updated_at?: string
@@ -120,6 +236,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string
+          order_type?: string | null
           status?: string
           total_amount?: number
           updated_at?: string

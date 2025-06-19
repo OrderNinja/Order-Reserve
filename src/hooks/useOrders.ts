@@ -39,9 +39,25 @@ export const useOrders = () => {
       const { data, error } = await supabase
         .from('orders')
         .select(`
-          *,
+          id,
+          order_number,
+          customer_name,
+          customer_email,
+          customer_phone,
+          order_type,
+          status,
+          total_amount,
+          notes,
+          created_at,
+          updated_at,
           order_items (
-            *,
+            id,
+            order_id,
+            menu_item_id,
+            quantity,
+            price,
+            selected_options,
+            selected_add_ons,
             menu_items (name, description)
           )
         `)
