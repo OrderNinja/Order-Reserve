@@ -37,6 +37,21 @@ const AdminOrders = () => {
     );
   };
 
+  const getOrderTypeBadge = (orderType: string) => {
+    const typeConfig = {
+      'dine-in': { label: "Dine-in", className: "bg-purple-100 text-purple-800" },
+      'takeaway': { label: "Takeaway", className: "bg-orange-100 text-orange-800" },
+    };
+
+    const config = typeConfig[orderType as keyof typeof typeConfig] || typeConfig['dine-in'];
+    
+    return (
+      <Badge className={config.className}>
+        {config.label}
+      </Badge>
+    );
+  };
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       await updateOrderStatusMutation.mutateAsync({
@@ -113,6 +128,7 @@ const AdminOrders = () => {
                     <TableHead>Customer</TableHead>
                     <TableHead>Items</TableHead>
                     <TableHead>Total</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Actions</TableHead>
@@ -138,6 +154,7 @@ const AdminOrders = () => {
                         </div>
                       </TableCell>
                       <TableCell>${order.total_amount}</TableCell>
+                      <TableCell>{getOrderTypeBadge(order.order_type || 'dine-in')}</TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>{formatTime(order.created_at)}</TableCell>
                       <TableCell>
