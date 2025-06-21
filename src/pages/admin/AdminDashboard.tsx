@@ -6,22 +6,56 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { useOrders } from "@/hooks/useOrders";
+import { useReservations } from "@/hooks/useReservations";
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Fetch real data
+  const { data: orders = [], isLoading: ordersLoading } = useOrders();
+  const { data: reservations = [], isLoading: reservationsLoading } = useReservations();
 
-  // Mock data - will be replaced with real database data
-  const recentOrders = [
-    { id: "ORD001", customer: "John Doe", items: 3, total: 45.99, status: "preparing", time: "10:30 AM" },
-    { id: "ORD002", customer: "Jane Smith", items: 2, total: 32.50, status: "new", time: "10:45 AM" },
-    { id: "ORD003", customer: "Mike Johnson", items: 4, total: 67.80, status: "ready", time: "11:00 AM" },
-  ];
+  // Calculate today's data
+  const today = new Date().toDateString();
+  const todayOrders = orders.filter(order => 
+    new Date(order.created_at).toDateString() === today
+  );
+  const todayReservations = reservations.filter(reservation => 
+    new Date(reservation.reservation_date).toDateString() === today
+  );
 
-  const recentReservations = [
-    { id: "RES001", customer: "Sarah Wilson", guests: 4, date: "Today", time: "7:00 PM", status: "confirmed" },
-    { id: "RES002", customer: "Tom Brown", guests: 2, date: "Today", time: "8:30 PM", status: "confirmed" },
-    { id: "RES003", customer: "Lisa Davis", guests: 6, date: "Tomorrow", time: "6:00 PM", status: "pending" },
-  ];
+  // Calculate stats
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + order.total_amount, 0);
+  const activeOrders = orders.filter(order => 
+    ['new', 'preparing', 'ready'].includes(order.status)
+  ).length;
+  
+  // Calculate average wait time (simplified - using order count as proxy)
+  const avgWaitTime = activeOrders > 0 ? Math.round(18 + (activeOrders * 2)) : 15;
+
+  // Get recent orders (last 5)
+  const recentOrders = orders.slice(0, 5).map(order => ({
+    id: order.order_number,
+    customer: order.customer_name,
+    items: order.order_items?.length || 0,
+    total: order.total_amount,
+    status: order.status,
+    time: new Date(order.created_at).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }));
+
+  // Get today's reservations (first 5)
+  const recentReservations = todayReservations.slice(0, 5).map(reservation => ({
+    id: reservation.confirmation_id,
+    customer: reservation.customer_name,
+    guests: reservation.guest_count,
+    date: new Date(reservation.reservation_date).toDateString() === today ? "Today" : "Tomorrow",
+    time: reservation.reservation_time,
+    status: reservation.status
+  }));
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -41,6 +75,14 @@ const AdminDashboard = () => {
       </Badge>
     );
   };
+
+  if (ordersLoading || reservationsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -76,8 +118,8 @@ const AdminDashboard = () => {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$1,234</div>
-                <p className="text-xs text-muted-foreground">+12% from yesterday</p>
+                <div className="text-2xl font-bold">${todayRevenue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">{todayOrders.length} orders today</p>
               </CardContent>
             </Card>
             
@@ -87,8 +129,8 @@ const AdminDashboard = () => {
                 <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">23</div>
-                <p className="text-xs text-muted-foreground">5 new orders</p>
+                <div className="text-2xl font-bold">{activeOrders}</div>
+                <p className="text-xs text-muted-foreground">{orders.filter(o => o.status === 'new').length} new orders</p>
               </CardContent>
             </Card>
             
@@ -98,7 +140,7 @@ const AdminDashboard = () => {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
+                <div className="text-2xl font-bold">{todayReservations.length}</div>
                 <p className="text-xs text-muted-foreground">For today</p>
               </CardContent>
             </Card>
@@ -109,8 +151,8 @@ const AdminDashboard = () => {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">18m</div>
-                <p className="text-xs text-muted-foreground">-2m from avg</p>
+                <div className="text-2xl font-bold">{avgWaitTime}m</div>
+                <p className="text-xs text-muted-foreground">Based on current orders</p>
               </CardContent>
             </Card>
           </div>
@@ -128,19 +170,23 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                      <div>
-                        <p className="font-medium">{order.id}</p>
-                        <p className="text-sm text-gray-600">{order.customer}</p>
-                        <p className="text-sm text-gray-500">{order.items} items • ${order.total}</p>
+                  {recentOrders.length > 0 ? (
+                    recentOrders.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
+                        <div>
+                          <p className="font-medium">{order.id}</p>
+                          <p className="text-sm text-gray-600">{order.customer}</p>
+                          <p className="text-sm text-gray-500">{order.items} items • ${order.total}</p>
+                        </div>
+                        <div className="text-right">
+                          {getStatusBadge(order.status)}
+                          <p className="text-sm text-gray-500 mt-1">{order.time}</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        {getStatusBadge(order.status)}
-                        <p className="text-sm text-gray-500 mt-1">{order.time}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No orders yet</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -157,18 +203,22 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentReservations.map((reservation) => (
-                    <div key={reservation.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                      <div>
-                        <p className="font-medium">{reservation.customer}</p>
-                        <p className="text-sm text-gray-600">{reservation.guests} guests</p>
-                        <p className="text-sm text-gray-500">{reservation.date} at {reservation.time}</p>
+                  {recentReservations.length > 0 ? (
+                    recentReservations.map((reservation) => (
+                      <div key={reservation.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
+                        <div>
+                          <p className="font-medium">{reservation.customer}</p>
+                          <p className="text-sm text-gray-600">{reservation.guests} guests</p>
+                          <p className="text-sm text-gray-500">{reservation.date} at {reservation.time}</p>
+                        </div>
+                        <div className="text-right">
+                          {getStatusBadge(reservation.status)}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        {getStatusBadge(reservation.status)}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No reservations today</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
